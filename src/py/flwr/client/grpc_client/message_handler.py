@@ -61,6 +61,10 @@ def handle(
         return _fit(client, server_msg.fit_ins), 0, True
     if field == "evaluate_ins":
         return _evaluate(client, server_msg.evaluate_ins), 0, True
+    if field == "example_ins":
+        return _example_response(client, server_msg.example_ins), 0, True
+    if server_msg.HasField("example_ins"):
+        return _example_response(client, server_msg.example_ins), 0, True
     raise UnknownServerMessage()
 
 
@@ -133,3 +137,9 @@ def _evaluate(client: Client, evaluate_msg: ServerMessage.EvaluateIns) -> Client
     # Serialize evaluate result
     evaluate_res_proto = serde.evaluate_res_to_proto(evaluate_res)
     return ClientMessage(evaluate_res=evaluate_res_proto)
+
+def _example_response(client: Client, msg: ServerMessage.ExampleIns) -> ClientMessage:
+    question,l = serde.example_msg_from_proto(msg)
+    response, answer = client.example_response(question,l)
+    example_res = serde.example_res_to_proto(response,answer)
+    return ClientMessage(examples_res=example_res)

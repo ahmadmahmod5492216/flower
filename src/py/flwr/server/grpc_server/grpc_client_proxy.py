@@ -14,7 +14,7 @@
 # ==============================================================================
 """gRPC-based Flower ClientProxy implementation."""
 
-from typing import Optional
+from typing import Optional, Tuple, List
 
 from flwr import common
 from flwr.common import serde
@@ -51,6 +51,9 @@ class GrpcClientProxy(ClientProxy):
         get_properties_res = serde.get_properties_res_from_proto(
             client_msg.get_properties_res
         )
+
+        # Assign the received properties to the variable (properties) of the client
+        self.properties = get_properties_res.properties
         return get_properties_res
 
     def get_parameters(
@@ -123,3 +126,15 @@ class GrpcClientProxy(ClientProxy):
         client_msg: ClientMessage = res_wrapper.client_message
         disconnect = serde.disconnect_res_from_proto(client_msg.disconnect_res)
         return disconnect
+
+    def request(self, question: str, l: List[int]) -> Tuple[str, int]:
+        request_msg = serde.example_msg_to_proto(question, l)
+        res_wrapper: ResWrapper = self.bridge.request(
+            ins_wrapper=InsWrapper(
+                server_message=ServerMessage(example_ins=request_msg),
+                timeout=None,
+            )
+        )
+        client_msg: ClientMessage = res_wrapper.client_message
+        response, answer = serde.example_res_from_proto(client_msg.examples_res)
+        return response, answer

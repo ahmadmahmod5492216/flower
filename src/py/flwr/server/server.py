@@ -19,7 +19,7 @@ import concurrent.futures
 import timeit
 from logging import DEBUG, INFO
 from typing import Dict, List, Optional, Tuple
-
+import time
 from flwr.common import (
     DisconnectRes,
     EvaluateIns,
@@ -29,6 +29,7 @@ from flwr.common import (
     Parameters,
     ReconnectIns,
     Scalar,
+    GetPropertiesIns,
 )
 from flwr.common.logger import log
 from flwr.common.typing import GetParametersIns
@@ -81,6 +82,24 @@ class Server:
         """Run federated averaging for a number of rounds."""
         history = History()
 
+        # Properties calling
+        log(INFO, "Client's properties")
+        received_properties = self.properties()
+        ram= received_properties.properties['RAM']
+        cpu= received_properties.properties['CPU']
+        delay = received_properties.properties['delay']
+        IE = received_properties.properties['IE']
+        # print(received_properties.properties)
+        log(INFO, 'RAM: '+str(ram)+'% - CPU: '+str(cpu)+'%' + ' Delay: '+ str(delay) +' second' + ', IE: ' + str(IE))
+
+        # Test new message
+        # log(INFO, "Test new messages")
+        # random_client = self._client_manager.sample(1)[0]
+        # print("Properties from Sampled Client: ", random_client.properties)
+        # response, answer = self.example_request(random_client)
+        # print(response, answer)
+        # log(INFO, 'New message response: ' + response + ' ' + str(answer))
+
         # Initialize parameters
         log(INFO, "Initializing global parameters")
         self.parameters = self._get_initial_parameters(timeout=timeout)
@@ -102,6 +121,7 @@ class Server:
 
         for current_round in range(1, num_rounds + 1):
             # Train model and replace previous global model
+
             res_fit = self.fit_round(rnd=current_round, timeout=timeout)
             if res_fit:
                 parameters_prime, _, _ = res_fit  # fit_metrics_aggregated
@@ -194,6 +214,7 @@ class Server:
         """Perform a single round of federated averaging."""
 
         # Get clients and their respective instructions from strategy
+
         client_instructions = self.strategy.configure_fit(
             rnd=rnd, parameters=self.parameters, client_manager=self._client_manager
         )
@@ -260,6 +281,17 @@ class Server:
         get_parameters_res = random_client.get_parameters(ins=ins, timeout=timeout)
         log(INFO, "Received initial parameters from one random client")
         return get_parameters_res.parameters
+
+    def example_request(self, client: ClientProxy) -> Tuple[str, int]:
+        question = "Could you find the sum of the list, Bob?"
+        l = [1, 2, 3]
+        return client.request(question, l)
+
+    def properties(self):
+        random_client = self._client_manager.sample(1)[0]
+        send_time = time.time()
+        ins = GetPropertiesIns(config={'time': send_time})
+        return random_client.get_properties(ins=ins, timeout=None)
 
 
 def reconnect_clients(
@@ -338,6 +370,8 @@ def fit_client(
     client: ClientProxy, ins: FitIns, timeout: Optional[float]
 ) -> Tuple[ClientProxy, FitRes]:
     """Refine parameters on a single client."""
+    properties = client.get_properties()
+    log('INFO', str(properties['delay']))
     fit_res = client.fit(ins, timeout=timeout)
     return client, fit_res
 

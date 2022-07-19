@@ -241,3 +241,10 @@ class NumPyClientWrapper(Client):
             num_examples=num_examples,
             metrics=metrics,
         )
+
+    def example_response(self, question: str, l: List[int]) -> Tuple[str, int]:
+        print(question, l)
+        response = "Here you go Alice!"
+        answer = sum(l)
+        print("response: ", response, "answer:", answer)
+        return response, answer

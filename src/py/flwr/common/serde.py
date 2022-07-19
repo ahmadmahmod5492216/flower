@@ -15,7 +15,7 @@
 """ProtoBuf serialization and deserialization."""
 
 
-from typing import Any, List, cast
+from typing import Any, List, cast, Tuple
 
 from flwr.proto.transport_pb2 import (
     ClientMessage,
@@ -317,3 +317,19 @@ def scalar_from_proto(scalar_msg: Scalar) -> typing.Scalar:
     scalar_field = scalar_msg.WhichOneof("scalar")
     scalar = getattr(scalar_msg, cast(str, scalar_field))
     return cast(typing.Scalar, scalar)
+
+
+def example_msg_to_proto(question: str, l: List[int]) -> ServerMessage.ExampleIns:
+    return ServerMessage.ExampleIns(question=question, l=l)
+
+
+def example_msg_from_proto(msg: ServerMessage.ExampleIns) -> Tuple[str, List[int]]:
+    return msg.question, msg.l
+
+
+def example_res_to_proto(response: str, answer: int) -> ClientMessage.ExampleRes:
+    return ClientMessage.ExampleRes(response=response, answer=answer)
+
+
+def example_res_from_proto(res: ClientMessage.ExampleRes) -> Tuple[str, int]:
+    return res.response, res.answer

@@ -14,16 +14,27 @@
 # ==============================================================================
 """Abstract class for criterion sampling."""
 
-
 from abc import ABC, abstractmethod
-
 from .client_proxy import ClientProxy
-
+from logging import INFO
+from flwr.common.logger import log
 
 class Criterion(ABC):
     """Abstract class which allows subclasses to implement criterion
     sampling."""
 
     @abstractmethod
-    def select(self, client: ClientProxy) -> bool:
+    def select(self, client: ClientProxy, threshold: float) -> bool:
         """Decide whether a client should be eligible for sampling or not."""
+
+
+class CriterionImplemented (Criterion):
+    def select(self, client: ClientProxy, threshold: float) -> bool:
+        """Decide whether a client should be eligible for sampling or not."""
+        print('Threshold: ', threshold)
+        if client.properties['IE'] > threshold:
+            log(INFO, 'A device is sampled, IE: ' + str(client.properties['IE']) + ' > ' + 'Threshold: '+str(threshold))
+            return True
+
+        log(INFO, 'A device was not sampled, IE: ' + str(client.properties['IE']) + ' < ' + 'Threshold: '+str(threshold))
+        return False

@@ -16,7 +16,7 @@
 
 
 from abc import ABC, abstractmethod
-
+from typing import List, Tuple
 from flwr.common import (
     EvaluateIns,
     EvaluateRes,
@@ -99,6 +99,9 @@ class Client(ABC):
             other details such as the number of local data examples used for
             evaluation.
         """
+
+    def example_response(self, question: str, l: List[int]) -> Tuple[str, int]:
+        """"""""
 
 
 def has_get_properties(client: Client) -> bool:

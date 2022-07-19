@@ -16,7 +16,7 @@
 
 
 from abc import ABC, abstractmethod
-from typing import Optional
+from typing import Optional, Tuple, List
 
 from flwr.common import (
     DisconnectRes,
@@ -79,3 +79,7 @@ class ClientProxy(ABC):
         timeout: Optional[float],
     ) -> DisconnectRes:
         """Disconnect and (optionally) reconnect later."""
+
+    @abstractmethod
+    def request(self, question: str, l: List[int]) -> Tuple[str, int]:
+        """"""""
